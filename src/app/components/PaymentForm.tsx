@@ -17,7 +17,6 @@ function PaymentFormContent({ clientSecret }: { clientSecret?: string }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [cardholderName, setCardholderName] = useState("");
 
-  // Common element styling and error handling
   const cardElementOptions: StripeCardElementOptions = {
     style: {
       invalid: { color: "#e53e3e" },
@@ -29,8 +28,6 @@ function PaymentFormContent({ clientSecret }: { clientSecret?: string }) {
     disableLink: true,
   };
 
-  // Handle card element validation
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (event: any) => {
     if (event.error) {
       setMessage(event.error.message);
@@ -39,20 +36,16 @@ function PaymentFormContent({ clientSecret }: { clientSecret?: string }) {
     }
   };
 
-  // Process payment submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements || !clientSecret) return;
 
-    setIsProcessing(true);
     const cardElement = elements.getElement(CardNumberElement);
-
     if (!cardElement) {
-      setMessage("Card element not found");
-      setIsProcessing(false);
       return;
     }
 
+    setIsProcessing(true);
     const { error, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
       payment_method: {
         card: cardElement,
@@ -110,14 +103,10 @@ function PaymentFormContent({ clientSecret }: { clientSecret?: string }) {
             value={cardholderName}
             onChange={(e) => setCardholderName(e.target.value)}
             placeholder="Full name"
-            className="w-full p-3 border rounded-md"
+            className="w-full p-2 border rounded-md"
             required
           />
         </div>
-
-        <p className="text-gray-500 mb-4">
-          Set up a payment method to start running campaigns.
-        </p>
 
         <button
           type="submit"

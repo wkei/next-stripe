@@ -11,7 +11,6 @@ const getStripePromise = () => {
       "Stripe publishable key is not set in environment variables"
     );
   }
-  // Try to disable Link beta feature
   return loadStripe(key);
 };
 
@@ -31,9 +30,6 @@ export function StripeProvider({
       stripe={stripePromise}
       options={{
         clientSecret,
-        appearance: {
-          theme: "stripe",
-        },
       }}
     >
       {children}
