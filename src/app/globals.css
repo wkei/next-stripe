@@ -24,3 +24,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Add this to hide Stripe Link autofill button */
+[data-testid="linkPillButton"],
+.Link-button,
+.StripeLink,
+.StripeLink--link {
+  display: none !important;
+}
