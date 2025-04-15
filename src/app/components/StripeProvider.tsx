@@ -17,26 +17,6 @@ const getStripePromise = () => {
 
 const stripePromise = getStripePromise();
 
-export function StripeProvider({
-  children,
-  clientSecret,
-}: {
-  children: ReactNode;
-  clientSecret?: string;
-}) {
-  if (!clientSecret) return children;
-
-  return (
-    <Elements
-      stripe={stripePromise}
-      options={{
-        clientSecret,
-        appearance: {
-          theme: "stripe",
-        },
-      }}
-    >
-      {children}
-    </Elements>
-  );
+export function StripeProvider({ children }: { children: ReactNode }) {
+  return <Elements stripe={stripePromise}>{children}</Elements>;
 }

@@ -10,7 +10,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { StripeCardElementOptions } from "@stripe/stripe-js";
 
-function PaymentFormContent({ clientSecret }: { clientSecret?: string }) {
+function PaymentFormContent() {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState<string | null>(null);
@@ -42,31 +42,56 @@ function PaymentFormContent({ clientSecret }: { clientSecret?: string }) {
   // Process payment submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements || !clientSecret) return;
+    if (!stripe || !elements) return;
 
     setIsProcessing(true);
-    const cardElement = elements.getElement(CardNumberElement);
 
-    if (!cardElement) {
-      setMessage("Card element not found");
+    try {
+      // Fetch client secret at the beginning of handleSubmit
+      const response = await fetch("/api/create-setup-intent", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create setup intent");
+      }
+
+      const { clientSecret } = await response.json();
+
+      if (!clientSecret) {
+        throw new Error("No client secret received");
+      }
+
+      const cardElement = elements.getElement(CardNumberElement);
+
+      if (!cardElement) {
+        setMessage("Card element not found");
+        setIsProcessing(false);
+        return;
+      }
+
+      const { error, setupIntent } = await stripe.confirmCardSetup(
+        clientSecret,
+        {
+          payment_method: {
+            card: cardElement,
+            billing_details: { name: cardholderName },
+          },
+        }
+      );
+
+      if (error) {
+        setMessage(error.message ?? "An unexpected error occurred");
+      } else if (setupIntent?.status === "succeeded") {
+        setMessage("Payment method saved successfully!");
+      }
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
+    } finally {
       setIsProcessing(false);
-      return;
     }
-
-    const { error, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
-      payment_method: {
-        card: cardElement,
-        billing_details: { name: cardholderName },
-      },
-    });
-
-    if (error) {
-      setMessage(error.message ?? "An unexpected error occurred");
-    } else if (setupIntent?.status === "succeeded") {
-      setMessage("Payment method saved successfully!");
-    }
-
-    setIsProcessing(false);
   };
 
   return (
@@ -121,7 +146,7 @@ function PaymentFormContent({ clientSecret }: { clientSecret?: string }) {
 
         <button
           type="submit"
-          disabled={isProcessing || !stripe || !elements || !clientSecret}
+          disabled={isProcessing || !stripe || !elements}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           {isProcessing ? "Processing..." : "Save Payment Method"}
